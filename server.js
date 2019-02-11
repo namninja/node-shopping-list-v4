@@ -104,6 +104,37 @@ app.post('/recipes', jsonParser, (req, res) => {
   const item = Recipes.create(req.body.name, req.body.ingredients);
   res.status(201).json(item);
 });
+// when PUT request comes in with updated item, ensure has
+// required fields. also ensure that item id in url path, and
+// item id in updated item object match. if problems with any
+// of that, log error and send back status code 400. otherwise
+// call `Recipes.update` with updated item.
+app.put('/recipes/:id', jsonParser, (req, res) => {
+  //ensure all required fields are present
+  const requiredFields = ['name', 'ingredients', 'id'];
+  for (let i = 0; i < requiredFields.length; i++) {
+    const field = requiredFields[i];
+    if (!(field in req.body)) {
+      const message = `Missing \`${field}\` in request body`
+      console.error(message);
+      return res.status(400).send(message);
+    }
+    //ensure that item id to be changed is correct
+    if (req.params.id !== req.body.id) {
+      const message = `Request path id (${req.params.id}) and request body id (${req.body.id}) must match`
+      console.error(message);
+      return res.status(400).send(message);
+    }
+    //update recipes item
+    console.log(`Updating recipes item \`${req.params.id}\``);
+    Recipes.update({
+    name: req.body.name,  
+    ingredients: req.body.ingredients,
+    id: req.params.id
+  });
+  res.status(204).end();
+  }
+});
 
 app.delete('/recipes/:id', (req, res) => {
   Recipes.delete(req.params.id);
